@@ -1,0 +1,34 @@
+﻿# Docker
+*.log
+*.pid
+*.pid.lock
+*.sock
+*.db
+
+# Node-RED
+node-red/data/flows_*.json
+node-red/data/flows_*.json.bak
+node-red/data/.config.json
+node-red/data/package-lock.json
+node-red/data/node_modules/
+
+# TimescaleDB
+timescaledb/data/
+timescaledb/init/
+
+# Mosquitto
+mosquitto/data/
+mosquitto/log/
+mosquitto/config/passwd
+mosquitto/config/*.db
+
+# Grafana
+grafana/data/
+grafana/plugins/
+grafana/logs/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
