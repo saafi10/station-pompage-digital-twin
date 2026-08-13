@@ -1,0 +1,102 @@
+[
+    {
+        "id": "3066643e29c90554",
+        "type": "tab",
+        "label": "Flux 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "mqtt-to-db",
+        "type": "tab",
+        "label": "MQTT → Database",
+        "disabled": false
+    },
+    {
+        "id": "mqtt-broker",
+        "type": "mqtt-broker",
+        "name": "Mosquitto",
+        "broker": "mqtt-broker",
+        "port": "1883",
+        "clientid": "nodered-writer"
+    },
+    {
+        "id": "mqtt-in",
+        "type": "mqtt in",
+        "z": "mqtt-to-db",
+        "name": "📩 Données MQTT",
+        "topic": "pompage/data/processed",
+        "qos": "1",
+        "broker": "mqtt-broker",
+        "inputs": 0,
+        "x": 100,
+        "y": 100,
+        "wires": [
+            [
+                "function-parse"
+            ]
+        ]
+    },
+    {
+        "id": "function-parse",
+        "type": "function",
+        "z": "mqtt-to-db",
+        "name": "🔧 Parser pour DB",
+        "func": "const d = msg.payload;\n\n// Extraire les données correctement\nconst data = {\n    pump_id: 1,\n    pressure: d.pumps?.a?.pressure || 0,\n    flow_rate: d.pumps?.a?.flow || 0,\n    temperature: d.pumps?.a?.temperature || 0,\n    vibration: d.pumps?.a?.vibration || 0,\n    power_consumption: (d.pumps?.a?.current || 0) * 400,\n    status: d.pumps?.a?.status ? 'RUNNING' : 'STOPPED',\n    tank_level: d.tank?.level || 0,\n    filter_clogging: d.filter?.clogging || 0,\n    hx_out_temp: d.heat_exchanger?.sea_water_out || 0,\n    hx_delta_t: d.heat_exchanger?.delta_t || 0,\n    system_efficiency: d.performance?.efficiency || 0,\n    energy_consumption: d.performance?.energy_consumption || 0\n};\n\nmsg.payload = data;\nmsg.topic = 'insert';\nreturn msg;",
+        "outputs": 1,
+        "x": 300,
+        "y": 100,
+        "wires": [
+            [
+                "timescale-insert"
+            ]
+        ]
+    },
+    {
+        "id": "timescale-insert",
+        "type": "timescale",
+        "z": "mqtt-to-db",
+        "name": "💾 Insert DB",
+        "server": "timescaledb",
+        "database": "pompage",
+        "table": "pump_data",
+        "columns": [
+            "pump_id",
+            "pressure",
+            "flow_rate",
+            "temperature",
+            "vibration",
+            "power_consumption",
+            "status",
+            "tank_level",
+            "filter_clogging",
+            "hx_out_temp",
+            "hx_delta_t",
+            "system_efficiency",
+            "energy_consumption"
+        ],
+        "timestamp": "NOW()",
+        "x": 500,
+        "y": 100,
+        "wires": [
+            [
+                "debug-out"
+            ]
+        ]
+    },
+    {
+        "id": "debug-out",
+        "type": "debug",
+        "z": "mqtt-to-db",
+        "name": "🐛 Debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 700,
+        "y": 100,
+        "wires": []
+    }
+]

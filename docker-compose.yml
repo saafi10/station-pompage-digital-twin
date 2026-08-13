@@ -1,9 +1,28 @@
-﻿version: '3.8'
-
+﻿
 services:
-  mosquitto:
+  digital-twin:
+    build: 
+      context: ./digital-twin
+      dockerfile: Dockerfile
+    container_name: digital-twin
+    ports:
+      - "4840:4840"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MQTT_BROKER=mqtt-broker
+      - MQTT_PORT=1883
+    restart: unless-stopped
+    networks:
+      - twin-network
+    volumes:
+      - ./digital-twin/src:/app/src
+      - ./digital-twin/data:/app/data
+    depends_on:
+      - mqtt-broker
+
+  mqtt-broker:
     image: eclipse-mosquitto:latest
-    container_name: mosquitto
+    container_name: mqtt-broker
     ports:
       - "1883:1883"
       - "9001:9001"
@@ -12,20 +31,30 @@ services:
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
     restart: unless-stopped
+    networks:
+      - twin-network
 
   timescaledb:
-    image: timescale/timescaledb:latest-pg14
+    image: timescale/timescaledb:latest-pg16
     container_name: timescaledb
     environment:
       POSTGRES_DB: pompage
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin123
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "5432:5432"
     volumes:
       - ./timescaledb/data:/var/lib/postgresql/data
       - ./timescaledb/init:/docker-entrypoint-initdb.d
     restart: unless-stopped
+    networks:
+      - twin-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d pompage"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   nodered:
     image: nodered/node-red:latest
@@ -38,8 +67,10 @@ services:
       - TZ=Europe/Paris
     restart: unless-stopped
     depends_on:
-      - mosquitto
+      - mqtt-broker
       - timescaledb
+    networks:
+      - twin-network
 
   grafana:
     image: grafana/grafana:latest
@@ -51,6 +82,15 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
     restart: unless-stopped
     depends_on:
-      - timescaledb
+      timescaledb:
+        condition: service_healthy
+    networks:
+      - twin-network
+
+networks:
+  twin-network:
+    driver: bridge
+

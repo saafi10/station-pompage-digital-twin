@@ -1,9 +1,23 @@
-﻿# Docker
+﻿# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
 *.log
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker
 *.pid
 *.pid.lock
 *.sock
-*.db
+docker-compose.override.yml
 
 # Node-RED
 node-red/data/flows_*.json
@@ -11,24 +25,36 @@ node-red/data/flows_*.json.bak
 node-red/data/.config.json
 node-red/data/package-lock.json
 node-red/data/node_modules/
-
-# TimescaleDB
-timescaledb/data/
-timescaledb/init/
+node-red/data/.npm/
 
 # Mosquitto
 mosquitto/data/
 mosquitto/log/
 mosquitto/config/passwd
-mosquitto/config/*.db
+
+# TimescaleDB
+timescaledb/data/
+!timescaledb/data/.gitkeep
 
 # Grafana
 grafana/data/
+!grafana/data/.gitkeep
 grafana/plugins/
 grafana/logs/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Project specific
+digital-twin/data/
+!digital-twin/data/.gitkeep
