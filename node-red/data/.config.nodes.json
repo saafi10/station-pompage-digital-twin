@@ -427,34 +427,63 @@
             }
         }
     },
-    "node-red-contrib-timescaledb": {
-        "name": "node-red-contrib-timescaledb",
-        "version": "0.2.0",
+    "node-red-contrib-postgresql": {
+        "name": "node-red-contrib-postgresql",
+        "version": "0.16.2",
         "local": true,
         "user": true,
         "nodes": {
-            "timescaledb": {
-                "name": "timescaledb",
+            "postgresql": {
+                "name": "postgresql",
                 "types": [
-                    "timescaledb-config",
-                    "timescaledb"
+                    "postgreSQLConfig",
+                    "postgresql"
                 ],
                 "enabled": true,
                 "local": true,
                 "user": false,
-                "module": "node-red-contrib-timescaledb",
-                "file": "/data/node_modules/node-red-contrib-timescaledb/timescaledb.js"
-            },
-            "mqtt-to-timescaledb": {
-                "name": "mqtt-to-timescaledb",
+                "module": "node-red-contrib-postgresql",
+                "file": "/data/node_modules/node-red-contrib-postgresql/postgresql.js"
+            }
+        }
+    },
+    "node-red-iot-mqtt-api": {
+        "name": "node-red-iot-mqtt-api",
+        "version": "1.0.1",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "iot-mqtt-api": {
+                "name": "iot-mqtt-api",
                 "types": [
-                    "mqtt-to-timescaledb"
+                    "iot-mqtt-in",
+                    "iot-mqtt-out",
+                    "iot-mqtt-broker"
                 ],
                 "enabled": true,
                 "local": true,
                 "user": false,
-                "module": "node-red-contrib-timescaledb",
-                "file": "/data/node_modules/node-red-contrib-timescaledb/mqtt-to-timescaledb.js"
+                "module": "node-red-iot-mqtt-api",
+                "file": "/data/node_modules/node-red-iot-mqtt-api/iot-mqtt-api.js"
+            }
+        }
+    },
+    "node-red-contrib-mqtt-broker": {
+        "name": "node-red-contrib-mqtt-broker",
+        "version": "0.2.9",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "mosca-mqtt-broker": {
+                "name": "mosca-mqtt-broker",
+                "types": [
+                    "mosca in"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-mqtt-broker",
+                "file": "/data/node_modules/node-red-contrib-mqtt-broker/mosca.js"
             }
         }
     }

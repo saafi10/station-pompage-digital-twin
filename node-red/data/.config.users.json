@@ -6,7 +6,7 @@
                 "view-store-position": false,
                 "view-show-grid": true,
                 "view-snap-grid": true,
-                "view-grid-size": 20,
+                "view-grid-size": "20",
                 "view-node-status": true,
                 "view-node-info-icon": true,
                 "view-node-show-label": true,
@@ -15,7 +15,53 @@
             },
             "tours": {
                 "welcome": "5.0.4"
+            },
+            "sidebar": {
+                "state": {
+                    "v": 4,
+                    "tabs": [],
+                    "primary": {
+                        "width": 0,
+                        "top": {
+                            "tabs": [
+                                "info",
+                                "help",
+                                "config",
+                                "context"
+                            ],
+                            "hidden": true,
+                            "active": "config"
+                        },
+                        "bottom": {
+                            "tabs": [
+                                "debug"
+                            ],
+                            "hidden": true,
+                            "active": "debug"
+                        }
+                    },
+                    "secondary": {
+                        "width": 231,
+                        "top": {
+                            "tabs": [
+                                "explorer"
+                            ],
+                            "height": 303.20000000000005,
+                            "hidden": false,
+                            "active": "explorer"
+                        },
+                        "bottom": {
+                            "tabs": [
+                                "palette"
+                            ],
+                            "hidden": false,
+                            "active": "palette"
+                        }
+                    }
+                }
             }
-        }
+        },
+        "menu-menu-item-right-sidebar": false,
+        "menu-menu-item-left-sidebar": true
     }
 }

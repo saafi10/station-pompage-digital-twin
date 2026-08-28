@@ -58,3 +58,6 @@ Desktop.ini
 # Project specific
 digital-twin/data/
 !digital-twin/data/.gitkeep
+node-red/data/.config.runtime.json
+node-red/data/.config.runtime.json.backup
+node-red/data/flows_cred.json
