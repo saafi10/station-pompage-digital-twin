@@ -13,9 +13,6 @@
                 "view-show-tips": true,
                 "view-show-welcome-tours": true
             },
-            "tours": {
-                "welcome": "5.0.4"
-            },
             "sidebar": {
                 "state": {
                     "v": 4,
@@ -27,8 +24,10 @@
                                 "info",
                                 "help",
                                 "config",
-                                "context"
+                                "context",
+                                "dashboard"
                             ],
+                            "height": 301.6,
                             "hidden": true,
                             "active": "config"
                         },
@@ -41,12 +40,12 @@
                         }
                     },
                     "secondary": {
-                        "width": 231,
+                        "width": 211,
                         "top": {
                             "tabs": [
                                 "explorer"
                             ],
-                            "height": 303.20000000000005,
+                            "height": 301.6,
                             "hidden": false,
                             "active": "explorer"
                         },
@@ -59,9 +58,11 @@
                         }
                     }
                 }
+            },
+            "tours": {
+                "welcome": "5.0.4"
             }
         },
-        "menu-menu-item-right-sidebar": false,
-        "menu-menu-item-left-sidebar": true
+        "menu-menu-item-right-sidebar": false
     }
 }

@@ -13,22 +13,21 @@
                 "view-show-tips": true,
                 "view-show-welcome-tours": true
             },
-            "tours": {
-                "welcome": "5.0.4"
-            },
             "sidebar": {
                 "state": {
                     "v": 4,
                     "tabs": [],
                     "primary": {
-                        "width": 232,
+                        "width": 0,
                         "top": {
                             "tabs": [
                                 "info",
                                 "help",
                                 "config",
-                                "context"
+                                "context",
+                                "dashboard"
                             ],
+                            "height": 301.6,
                             "hidden": false,
                             "active": "config"
                         },
@@ -36,17 +35,17 @@
                             "tabs": [
                                 "debug"
                             ],
-                            "hidden": true,
+                            "hidden": false,
                             "active": "debug"
                         }
                     },
                     "secondary": {
-                        "width": 231,
+                        "width": 211,
                         "top": {
                             "tabs": [
                                 "explorer"
                             ],
-                            "height": 303.20000000000005,
+                            "height": 301.6,
                             "hidden": false,
                             "active": "explorer"
                         },
@@ -59,9 +58,11 @@
                         }
                     }
                 }
+            },
+            "tours": {
+                "welcome": "5.0.4"
             }
         },
-        "menu-menu-item-right-sidebar": true,
-        "menu-menu-item-left-sidebar": true
+        "menu-menu-item-right-sidebar": true
     }
 }

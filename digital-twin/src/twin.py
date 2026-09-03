@@ -1,11 +1,11 @@
 ﻿# digital-twin/src/twin.py
 import math
-import random
 from typing import Dict, Any
 
 class PumpingStationTwin:
     def __init__(self):
-        self.system_state = True
+        self.system_state = False           # démarre à l'arrêt (controle manuel)
+        self.system_mode = 'NORMAL'         # NORMAL | TEST_OVERHEAT | TEST_VIBRATION | TEST_FILTER
         self.simulation_time = 0
         self.cycle_count = 0
 
@@ -38,8 +38,6 @@ class PumpingStationTwin:
         # Pompes
         self.pump_a_command = False
         self.pump_b_command = False
-        self.pump_a_setpoint = 0.0
-        self.pump_b_setpoint = 0.0
         self.pump_a_status = False
         self.pump_b_status = False
         self.pump_a_speed = 0.0
@@ -94,7 +92,6 @@ class PumpingStationTwin:
         # Paramètres
         self.demand_flow = 100.0
         self.ambient_temp = 22.5
-        self.process_heat_load = 500.0
         self.season_factor = 1.0
         self.time_of_day = 0.0
 
@@ -103,10 +100,6 @@ class PumpingStationTwin:
         self.pump_b_fault = False
         self.filter_fault = False
         self.power_outage = False
-
-        # Scénarios de panne temporisés (déclenchables via MQTT)
-        self.active_scenario = None
-        self.scenario_remaining = 0.0
 
         # Alarmes
         self.alarm_pump_a_overload = False
@@ -129,33 +122,25 @@ class PumpingStationTwin:
         self.co2_footprint = 0.0
         self.operating_cost = 0.0
 
-    def trigger_fault(self, component: str, duration_sec: float = 30.0):
-        """Déclenche une panne temporaire sur un composant ('pump_a', 'pump_b', 'filter').
-        La panne se lève automatiquement après duration_sec secondes de simulation."""
-        if component == 'pump_a':
-            self.pump_a_fault = True
-        elif component == 'pump_b':
-            self.pump_b_fault = True
-        elif component == 'filter':
-            self.filter_fault = True
-        self.active_scenario = component
-        self.scenario_remaining = duration_sec
+    def set_mode(self, mode: str):
+        """Change le mode de fonctionnement. Modes de test PERSISTANTS
+        (ne se lèvent pas seuls — repasser explicitement en NORMAL)."""
+        valid = ('NORMAL', 'TEST_OVERHEAT', 'TEST_VIBRATION', 'TEST_FILTER')
+        if mode in valid:
+            self.system_mode = mode
 
-    def _update_scenario(self, dt: float):
-        if self.active_scenario:
-            self.scenario_remaining -= dt
-            if self.scenario_remaining <= 0:
-                if self.active_scenario == 'pump_a':
-                    self.pump_a_fault = False
-                elif self.active_scenario == 'pump_b':
-                    self.pump_b_fault = False
-                elif self.active_scenario == 'filter':
-                    self.filter_fault = False
-                self.active_scenario = None
+    def _apply_test_mode(self):
+        if self.system_mode == 'TEST_OVERHEAT':
+            self.pump_a_temperature = 50.0
+            self.alarm_pump_a_high_temp = True
+        elif self.system_mode == 'TEST_VIBRATION':
+            self.pump_a_vibration = 4.5
+            self.alarm_pump_a_high_vibration = True
+        elif self.system_mode == 'TEST_FILTER':
+            self.filter_clogging = 95.0
+            self.alarm_filter_clogged = True
 
     def update(self, dt: float = 0.1):
-        self._update_scenario(dt)
-
         self.simulation_time += dt
         self.cycle_count += 1
         self.time_of_day = (self.simulation_time / 3600) % 24
@@ -172,6 +157,7 @@ class PumpingStationTwin:
             self._update_discharge()
             self._update_performance(dt)
             self._update_alarms()
+            self._apply_test_mode()
 
     def _update_intake(self):
         self.sea_water_temp = max(-2.0, min(35.0,
@@ -203,8 +189,6 @@ class PumpingStationTwin:
         self.alarm_tank_high_level = self.tank_level > 3.8
 
     def _update_dosing(self):
-        """Poste de dosage chlore (anti-biofouling) - boucle de régulation simplifiée
-        autour d'une consigne (chlore_setpoint), active uniquement si de l'eau circule."""
         if self.filter_flow_rate > 0.0 or self.intake_flow_rate > 0.0:
             self.chlore_dosing_pump_active = True
             error = self.chlore_setpoint - self.chlore_residuel
@@ -229,7 +213,6 @@ class PumpingStationTwin:
             self.pump_b_command = False
             self.active_pump = 0
 
-        # Pompe A
         if self.pump_a_command and not self.pump_a_fault and not self.power_outage:
             self.pump_a_status = True
             self.pump_a_speed = max(0.0, min(100.0, 50.0 + 50.0 * (self.tank_level - 1.5) / 2.5))
@@ -254,7 +237,6 @@ class PumpingStationTwin:
             self.pump_a_vibration = 0.0
             self.pump_a_power = 0.0
 
-        # Pompe B (secours)
         if self.active_pump == 1:
             self.pump_b_status = False
             self.pump_b_flow = 0.0
@@ -345,35 +327,24 @@ class PumpingStationTwin:
 
     def _update_alarms(self):
         self.alarm_system_error = any([
-            self.alarm_pump_a_overload,
-            self.alarm_pump_a_high_vibration,
-            self.alarm_pump_a_high_temp,
-            self.alarm_filter_clogged,
-            self.alarm_tank_low_level,
-            self.alarm_tank_high_level,
-            self.alarm_hx_overheat,
-            self.alarm_chlore_out_of_range
+            self.alarm_pump_a_overload, self.alarm_pump_a_high_vibration, self.alarm_pump_a_high_temp,
+            self.alarm_filter_clogged, self.alarm_tank_low_level, self.alarm_tank_high_level,
+            self.alarm_hx_overheat, self.alarm_chlore_out_of_range
         ])
 
     def get_all_data(self) -> Dict[str, Any]:
         return {
             'system_state': self.system_state,
+            'system_mode': self.system_mode,
             'simulation_time': self.simulation_time,
             'sea_water_temp': self.sea_water_temp,
             'sea_water_turbidity': self.sea_water_turbidity,
             'sea_water_salinity': self.sea_water_salinity,
             'intake_flow_rate': self.intake_flow_rate,
-            'screen_pressure_drop': self.screen_pressure_drop,
-            'screen_clogging': self.screen_clogging,
-            'debris_level': self.debris_level,
             'tank_level': self.tank_level,
-            'tank_inflow': self.tank_inflow,
-            'tank_outflow': self.tank_outflow,
             'chlore_residuel': self.chlore_residuel,
             'chlore_injection_rate': self.chlore_injection_rate,
-            'chlore_dosing_pump_active': self.chlore_dosing_pump_active,
             'pump_a_status': self.pump_a_status,
-            'pump_a_speed': self.pump_a_speed,
             'pump_a_flow': self.pump_a_flow,
             'pump_a_pressure': self.pump_a_pressure,
             'pump_a_current': self.pump_a_current,
@@ -381,52 +352,28 @@ class PumpingStationTwin:
             'pump_a_temperature': self.pump_a_temperature,
             'pump_a_efficiency': self.pump_a_efficiency,
             'pump_a_power': self.pump_a_power,
-            'pump_a_running_hours': self.pump_a_running_hours,
-            'pump_a_total_flow': self.pump_a_total_flow,
             'pump_b_status': self.pump_b_status,
-            'pump_b_speed': self.pump_b_speed,
             'pump_b_flow': self.pump_b_flow,
             'pump_b_pressure': self.pump_b_pressure,
-            'pump_b_current': self.pump_b_current,
-            'pump_b_vibration': self.pump_b_vibration,
-            'pump_b_temperature': self.pump_b_temperature,
-            'pump_b_efficiency': self.pump_b_efficiency,
-            'pump_b_power': self.pump_b_power,
-            'pump_b_running_hours': self.pump_b_running_hours,
-            'pump_b_total_flow': self.pump_b_total_flow,
             'active_pump': self.active_pump,
             'filter_flow_rate': self.filter_flow_rate,
             'filter_pressure_drop': self.filter_pressure_drop,
             'filter_clogging': self.filter_clogging,
             'filter_efficiency': self.filter_efficiency,
-            'filter_backwash_count': self.filter_backwash_count,
-            'hx_sea_water_in_temp': self.hx_sea_water_in_temp,
             'hx_sea_water_out_temp': self.hx_sea_water_out_temp,
-            'hx_process_in_temp': self.hx_process_in_temp,
             'hx_process_out_temp': self.hx_process_out_temp,
             'hx_delta_t': self.hx_delta_t,
             'hx_heat_transfer': self.hx_heat_transfer,
-            'hx_efficiency': self.hx_efficiency,
-            'hx_fouling_factor': self.hx_fouling_factor,
             'discharge_temp': self.discharge_temp,
             'discharge_turbidity': self.discharge_turbidity,
             'discharge_flow': self.discharge_flow,
             'system_efficiency': self.system_efficiency,
             'energy_consumption': self.energy_consumption,
-            'water_consumption': self.water_consumption,
-            'co2_footprint': self.co2_footprint,
-            'operating_cost': self.operating_cost,
-            'active_scenario': self.active_scenario,
-            'scenario_remaining': self.scenario_remaining,
             'alarm_pump_a_overload': self.alarm_pump_a_overload,
             'alarm_pump_a_high_vibration': self.alarm_pump_a_high_vibration,
             'alarm_pump_a_high_temp': self.alarm_pump_a_high_temp,
-            'alarm_pump_b_overload': self.alarm_pump_b_overload,
-            'alarm_pump_b_high_vibration': self.alarm_pump_b_high_vibration,
-            'alarm_pump_b_high_temp': self.alarm_pump_b_high_temp,
             'alarm_filter_clogged': self.alarm_filter_clogged,
             'alarm_tank_low_level': self.alarm_tank_low_level,
-            'alarm_tank_high_level': self.alarm_tank_high_level,
             'alarm_hx_overheat': self.alarm_hx_overheat,
             'alarm_chlore_out_of_range': self.alarm_chlore_out_of_range,
             'alarm_system_error': self.alarm_system_error,

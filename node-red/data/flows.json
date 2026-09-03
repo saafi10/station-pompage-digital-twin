@@ -1,103 +1,69 @@
 [
     {
-        "id": "3066643e29c90554",
+        "id": "442c5ff5842c0328",
         "type": "tab",
-        "label": "Flux 1",
+        "label": "Flow 1",
         "disabled": false,
         "info": "",
         "env": []
     },
     {
-        "id": "9b7b90585f079963",
+        "id": "tabControle",
         "type": "tab",
-        "label": "MQTT → PostgreSQL",
-        "disabled": false
+        "label": "1 - Controle",
+        "disabled": false,
+        "info": ""
     },
     {
-        "id": "444a305037add620",
-        "type": "postgreSQLConfig",
-        "name": "",
-        "host": "timescaledb",
-        "hostFieldType": "str",
-        "port": 5432,
-        "portFieldType": "num",
-        "database": "pompage",
-        "databaseFieldType": "str",
-        "ssl": "true",
-        "sslFieldType": "bool",
-        "applicationName": "",
-        "applicationNameType": "str",
-        "max": 10,
-        "maxFieldType": "num",
-        "idle": 1000,
-        "idleFieldType": "num",
-        "connectionTimeout": 10000,
-        "connectionTimeoutFieldType": "num",
-        "userFieldType": "cred",
-        "userEnv": "",
-        "passwordFieldType": "cred",
-        "passwordEnv": ""
+        "id": "tabOpcua",
+        "type": "tab",
+        "label": "2 - OPC UA vers MQTT",
+        "disabled": false,
+        "info": ""
     },
     {
-        "id": "f58d031dcff30b2c",
-        "type": "postgreSQLConfig",
-        "name": "",
-        "host": "timescaledb",
-        "hostFieldType": "str",
-        "port": 5432,
-        "portFieldType": "num",
-        "database": "pompage",
-        "databaseFieldType": "str",
-        "ssl": "false",
-        "sslFieldType": "bool",
-        "applicationName": "",
-        "applicationNameType": "str",
-        "max": 10,
-        "maxFieldType": "num",
-        "idle": 1000,
-        "idleFieldType": "num",
-        "connectionTimeout": 10000,
-        "connectionTimeoutFieldType": "num",
-        "userFieldType": "cred",
-        "userEnv": "",
-        "passwordFieldType": "cred",
-        "passwordEnv": ""
+        "id": "tabStockage",
+        "type": "tab",
+        "label": "3 - Donnees vers Base",
+        "disabled": false,
+        "info": ""
     },
     {
-        "id": "e59de8acb6c2cbcd",
+        "id": "tabAlertes",
+        "type": "tab",
+        "label": "4 - Alertes",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "brokerMain",
         "type": "mqtt-broker",
         "name": "Mosquitto",
         "broker": "mqtt-broker",
-        "port": 1883,
+        "port": "1883",
         "clientid": "",
         "autoConnect": true,
         "usetls": false,
-        "protocolVersion": 4,
-        "keepalive": 60,
-        "cleansession": true,
-        "autoUnsubscribe": true,
-        "birthTopic": "",
-        "birthQos": "0",
-        "birthRetain": "false",
-        "birthPayload": "",
-        "birthMsg": {},
-        "closeTopic": "",
-        "closeQos": "0",
-        "closeRetain": "false",
-        "closePayload": "",
-        "closeMsg": {},
-        "willTopic": "",
-        "willQos": "0",
-        "willRetain": "false",
-        "willPayload": "",
-        "willMsg": {},
-        "userProps": "",
-        "sessionExpiry": ""
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true
     },
     {
-        "id": "bd12127f604b0fa1",
+        "id": "endpointMain",
+        "type": "OpcUa-Endpoint",
+        "endpoint": "opc.tcp://digital-twin:4840/freeopcua/server/",
+        "secpol": "None",
+        "secmode": "None",
+        "none": true,
+        "login": false,
+        "usercert": false,
+        "usercertificate": "",
+        "userprivatekey": ""
+    },
+    {
+        "id": "pgMain",
         "type": "postgreSQLConfig",
-        "name": "Insert DB",
+        "name": "TimescaleDB",
         "host": "timescaledb",
         "hostFieldType": "str",
         "port": 5432,
@@ -120,76 +86,409 @@
         "passwordEnv": ""
     },
     {
-        "id": "aa0a3782436fc6b6",
-        "type": "function",
-        "z": "9b7b90585f079963",
-        "name": "🔧 SQL INSERT",
-        "func": "const d = msg.payload;\n\n// Construction de la requête SQL\nconst sql = `INSERT INTO pump_data (time, pump_id, pressure, flow_rate, temperature, vibration, power_consumption, status)\nVALUES (NOW(), 1, ${d.pumps?.a?.pressure || 0}, ${d.pumps?.a?.flow || 0}, ${d.pumps?.a?.temperature || 0}, ${d.pumps?.a?.vibration || 0}, ${(d.pumps?.a?.current || 0) * 400}, 'RUNNING')`;\n\nmsg.params = [\n    1,\n    d.pumps?.a?.pressure || 0,\n    d.pumps?.a?.flow || 0,\n    d.pumps?.a?.temperature || 0,\n    d.pumps?.a?.vibration || 0,\n    (d.pumps?.a?.current || 0) * 400,\n    d.pumps?.a?.status ? 'RUNNING' : 'STOPPED',\n    d.tank?.level || 0,\n    d.filter?.clogging || 0,\n    d.heat_exchanger?.sea_water_out || 0,\n    d.heat_exchanger?.delta_t || 0,\n    d.performance?.efficiency || 0,\n    d.performance?.energy_consumption || 0\n];\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 300,
-        "y": 100,
+        "id": "c-start",
+        "type": "inject",
+        "z": "tabControle",
+        "name": "START",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "START",
+        "payloadType": "str",
+        "x": 150,
+        "y": 80,
         "wires": [
             [
-                "fef0d6884100ac98"
+                "c-mqttout"
             ]
         ]
     },
     {
-        "id": "05c8befdc05296e5",
+        "id": "c-stop",
+        "type": "inject",
+        "z": "tabControle",
+        "name": "STOP",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "STOP",
+        "payloadType": "str",
+        "x": 150,
+        "y": 130,
+        "wires": [
+            [
+                "c-mqttout"
+            ]
+        ]
+    },
+    {
+        "id": "c-normal",
+        "type": "inject",
+        "z": "tabControle",
+        "name": "NORMAL",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "NORMAL",
+        "payloadType": "str",
+        "x": 150,
+        "y": 180,
+        "wires": [
+            [
+                "c-mqttout"
+            ]
+        ]
+    },
+    {
+        "id": "c-overheat",
+        "type": "inject",
+        "z": "tabControle",
+        "name": "TEST_OVERHEAT",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "TEST_OVERHEAT",
+        "payloadType": "str",
+        "x": 170,
+        "y": 230,
+        "wires": [
+            [
+                "c-mqttout"
+            ]
+        ]
+    },
+    {
+        "id": "c-vibration",
+        "type": "inject",
+        "z": "tabControle",
+        "name": "TEST_VIBRATION",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "TEST_VIBRATION",
+        "payloadType": "str",
+        "x": 170,
+        "y": 280,
+        "wires": [
+            [
+                "c-mqttout"
+            ]
+        ]
+    },
+    {
+        "id": "c-filter",
+        "type": "inject",
+        "z": "tabControle",
+        "name": "TEST_FILTER",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "TEST_FILTER",
+        "payloadType": "str",
+        "x": 160,
+        "y": 330,
+        "wires": [
+            [
+                "c-mqttout"
+            ]
+        ]
+    },
+    {
+        "id": "c-mqttout",
+        "type": "mqtt out",
+        "z": "tabControle",
+        "name": "",
+        "topic": "pompage/control",
+        "qos": "0",
+        "retain": "false",
+        "broker": "brokerMain",
+        "x": 420,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "o-inject",
+        "type": "inject",
+        "z": "tabOpcua",
+        "name": "Toutes les 1s",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "1",
+        "once": true,
+        "onceDelay": 1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "o-func1"
+            ]
+        ]
+    },
+    {
+        "id": "o-func1",
+        "type": "function",
+        "z": "tabOpcua",
+        "name": "Construire topics",
+        "func": "const nodeIds = [\n    'ns=2;s=pump_a_flow',\n    'ns=2;s=pump_a_pressure',\n    'ns=2;s=pump_a_temperature',\n    'ns=2;s=pump_a_vibration',\n    'ns=2;s=pump_a_current',\n    'ns=2;s=pump_a_efficiency',\n    'ns=2;s=pump_a_power',\n    'ns=2;s=filter_flow_rate',\n    'ns=2;s=filter_clogging',\n    'ns=2;s=filter_pressure_drop',\n    'ns=2;s=tank_level',\n    'ns=2;s=system_efficiency',\n    'ns=2;s=energy_consumption'\n];\nreturn [nodeIds.map(id => ({ topic: id }))];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "x": 380,
+        "y": 100,
+        "wires": [
+            [
+                "o-opcua"
+            ]
+        ]
+    },
+    {
+        "id": "o-opcua",
+        "type": "OpcUa-Client",
+        "z": "tabOpcua",
+        "endpoint": "endpointMain",
+        "action": "read",
+        "deadbandtype": "a",
+        "deadbandvalue": 1,
+        "time": 10,
+        "timeUnit": "s",
+        "certificate": "n",
+        "localfile": "",
+        "localkeyfile": "",
+        "securitymode": "None",
+        "securitypolicy": "None",
+        "name": "Lire variables",
+        "x": 620,
+        "y": 100,
+        "wires": [
+            [
+                "o-func2"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "o-func2",
+        "type": "function",
+        "z": "tabOpcua",
+        "name": "Agreger JSON",
+        "func": "if (!context.buffer) context.buffer = {};\ncontext.buffer[msg.topic] = msg.payload;\n\nconst required = ['ns=2;s=pump_a_flow', 'ns=2;s=pump_a_temperature', 'ns=2;s=tank_level', 'ns=2;s=filter_clogging'];\nconst ready = required.every(k => context.buffer[k] !== undefined);\nif (!ready) return null;\n\nconst b = context.buffer;\nmsg.payload = {\n    timestamp: Date.now() / 1000,\n    pumps: {\n        active: 1,\n        a: {\n            flow: b['ns=2;s=pump_a_flow'],\n            pressure: b['ns=2;s=pump_a_pressure'],\n            temperature: b['ns=2;s=pump_a_temperature'],\n            vibration: b['ns=2;s=pump_a_vibration'],\n            current: b['ns=2;s=pump_a_current'],\n            status: b['ns=2;s=pump_a_flow'] > 0,\n            efficiency: b['ns=2;s=pump_a_efficiency'],\n            power: b['ns=2;s=pump_a_power']\n        }\n    },\n    filter: {\n        flow: b['ns=2;s=filter_flow_rate'],\n        clogging: b['ns=2;s=filter_clogging'],\n        pressure_drop: b['ns=2;s=filter_pressure_drop']\n    },\n    tank: { level: b['ns=2;s=tank_level'] },\n    performance: {\n        efficiency: b['ns=2;s=system_efficiency'],\n        energy_consumption: b['ns=2;s=energy_consumption']\n    }\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "x": 850,
+        "y": 100,
+        "wires": [
+            [
+                "o-mqttout",
+                "o-debug"
+            ]
+        ]
+    },
+    {
+        "id": "o-mqttout",
+        "type": "mqtt out",
+        "z": "tabOpcua",
+        "name": "",
+        "topic": "pompage/data/processed",
+        "qos": "0",
+        "retain": "false",
+        "broker": "brokerMain",
+        "x": 1090,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "o-debug",
         "type": "debug",
-        "z": "9b7b90585f079963",
-        "name": "🐛 Debug",
+        "z": "tabOpcua",
+        "name": "JSON agrege",
         "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "payload",
-        "x": 700,
+        "complete": "true",
+        "targetType": "full",
+        "x": 1090,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "s-mqttin",
+        "type": "mqtt in",
+        "z": "tabStockage",
+        "name": "",
+        "topic": "pompage/data/processed",
+        "qos": "2",
+        "datatype": "json",
+        "broker": "brokerMain",
+        "inputs": 0,
+        "x": 170,
+        "y": 100,
+        "wires": [
+            [
+                "s-func"
+            ]
+        ]
+    },
+    {
+        "id": "s-func",
+        "type": "function",
+        "z": "tabStockage",
+        "name": "Parser DB",
+        "func": "const d = msg.payload;\nconst p = d.pumps?.a || {};\nconst f = d.filter || {};\nconst t = d.tank || {};\nconst perf = d.performance || {};\n\nmsg.params = [\n    d.timestamp ?? null,\n    d.pumps?.active ?? 0,\n    p.flow ?? null,\n    p.pressure ?? null,\n    p.temperature ?? null,\n    p.vibration ?? null,\n    p.current ?? null,\n    p.status ?? false,\n    p.efficiency ?? null,\n    p.power ?? null,\n    f.flow ?? null,\n    f.clogging ?? null,\n    f.pressure_drop ?? null,\n    t.level ?? null,\n    perf.efficiency ?? null,\n    perf.energy_consumption ?? null\n];\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "x": 380,
+        "y": 100,
+        "wires": [
+            [
+                "s-pg"
+            ]
+        ]
+    },
+    {
+        "id": "s-pg",
+        "type": "postgresql",
+        "z": "tabStockage",
+        "name": "Insert pump_data",
+        "query": "INSERT INTO pump_data (simulation_time, pump_active, pump_flow, pump_pressure, pump_temperature, pump_vibration, pump_current, pump_status, pump_efficiency, pump_power, filter_flow, filter_clogging, filter_pressure_drop, tank_level, performance_efficiency, energy_consumption)\nVALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)",
+        "postgreSQLConfig": "pgMain",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 610,
+        "y": 100,
+        "wires": [
+            [
+                "s-debug"
+            ]
+        ]
+    },
+    {
+        "id": "s-debug",
+        "type": "debug",
+        "z": "tabStockage",
+        "name": "Resultat insert",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 830,
         "y": 100,
         "wires": []
     },
     {
-        "id": "fef0d6884100ac98",
-        "type": "postgresql",
-        "z": "9b7b90585f079963",
-        "name": "Insert DB",
-        "query": "   INSERT INTO pump_data (pump_id, pressure, flow_rate, temperature, vibration,\n     power_consumption, status, tank_level, filter_clogging, hx_out_temp,\n     hx_delta_t, system_efficiency, energy_consumption)\n   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)",
-        "postgreSQLConfig": "bd12127f604b0fa1",
-        "split": false,
-        "rowsPerMsg": 1,
-        "outputs": 1,
-        "x": 500,
+        "id": "a-mqttin",
+        "type": "mqtt in",
+        "z": "tabAlertes",
+        "name": "",
+        "topic": "pompage/data/processed",
+        "qos": "2",
+        "datatype": "json",
+        "broker": "brokerMain",
+        "inputs": 0,
+        "x": 170,
         "y": 100,
         "wires": [
             [
-                "05c8befdc05296e5"
+                "a-func"
             ]
         ]
     },
     {
-        "id": "2e91a828eb22613b",
-        "type": "mqtt in",
-        "z": "9b7b90585f079963",
-        "name": "📩 Données MQTT",
-        "topic": "pompage/data/processed",
-        "qos": "1",
-        "datatype": "auto-detect",
-        "broker": "e59de8acb6c2cbcd",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 90,
+        "id": "a-func",
+        "type": "function",
+        "z": "tabAlertes",
+        "name": "Evaluer seuils",
+        "func": "const d = msg.payload;\nconst p = d.pumps?.a || {};\nconst f = d.filter || {};\nconst t = d.tank || {};\n\nlet alerts = [];\nif (p.temperature >= 35) alerts.push({type:\"OVERHEAT\", severity:\"CRITICAL\", message:\"Pompe A surchauffe\", value:p.temperature, threshold:35});\nif (p.vibration >= 3) alerts.push({type:\"HIGH_VIBRATION\", severity:\"WARNING\", message:\"Pompe A vibration elevee\", value:p.vibration, threshold:3});\nif (p.current >= 80) alerts.push({type:\"HIGH_CURRENT\", severity:\"WARNING\", message:\"Pompe A courant eleve\", value:p.current, threshold:80});\nif (f.clogging >= 90) alerts.push({type:\"FILTER_CLOGGING\", severity:\"CRITICAL\", message:\"Filtre colmate\", value:f.clogging, threshold:90});\nif (t.level <= 0.5) alerts.push({type:\"LOW_TANK_LEVEL\", severity:\"CRITICAL\", message:\"Niveau bache bas\", value:t.level, threshold:0.5});\n\nif (alerts.length === 0) return null;\nreturn [alerts.map(a => ({ payload: a, params: [a.type, a.severity, a.message, a.value, a.threshold] }))];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "x": 400,
         "y": 100,
         "wires": [
             [
-                "aa0a3782436fc6b6"
+                "a-pg"
             ]
         ]
+    },
+    {
+        "id": "a-pg",
+        "type": "postgresql",
+        "z": "tabAlertes",
+        "name": "Insert alerts",
+        "query": "INSERT INTO alerts (alert_type, severity, message, value, threshold) VALUES ($1,$2,$3,$4,$5)",
+        "postgreSQLConfig": "pgMain",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 630,
+        "y": 100,
+        "wires": [
+            [
+                "a-debug"
+            ]
+        ]
+    },
+    {
+        "id": "a-debug",
+        "type": "debug",
+        "z": "tabAlertes",
+        "name": "Alerte inseree",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 850,
+        "y": 100,
+        "wires": []
     }
 ]
