@@ -9,6 +9,7 @@ datasources:
     secureJsonData:
       password: admin123
     jsonData:
+      database: pompage
       sslmode: disable
       postgresVersion: 1600
       timescaledb: true
